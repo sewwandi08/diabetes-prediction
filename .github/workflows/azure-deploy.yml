@@ -3,7 +3,7 @@ name: Build and Deploy to Azure
 on:
   push:
     branches:
-      - '**' # This triggers on any branch push
+      - '**'
 
 jobs:
   build:
@@ -54,8 +54,3 @@ jobs:
           app-name: 'diabetesprediction-webapp'
           images: 'diabetespredictionregistry.azurecr.io/ml-webapp:latest'
 
-      # Step 8: Post-deployment notification (optional)
-      - name: Send Deployment Notification
-        if: success()
-        run: |
-          curl -X POST -H 'Content-type: application/json' --data '{"text":"Deployment successful!"}' ${{ secrets.SLACK_WEBHOOK_URL }}
