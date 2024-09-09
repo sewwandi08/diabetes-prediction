@@ -3,7 +3,7 @@ name: Build and Deploy to Azure
 on:
   push:
     branches:
-      - main  # Deploy on push to the main branch
+      - '**'  
 
 jobs:
   build:
