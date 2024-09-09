@@ -3,15 +3,18 @@ name: Build and Deploy to Azure
 on:
   push:
     branches:
-      - '**'
+      - '**' # This triggers on any branch push
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
+      # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # Step 2: Log in to Azure Container Registry (ACR)
       - name: Log in to Azure Container Registry
         uses: azure/docker-login@v1
         with:
@@ -19,13 +22,40 @@ jobs:
           username: ${{ secrets.AZURE_REGISTRY_USERNAME }}
           password: ${{ secrets.AZURE_REGISTRY_PASSWORD }}
 
+      # Step 3: Set up Docker for building and pushing images
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Step 4: Cache Docker layers for faster builds
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      # Step 5: Build and push Docker image
       - name: Build and push Docker image
         run: |
           docker build -t diabetespredictionregistry.azurecr.io/ml-webapp:latest .
           docker push diabetespredictionregistry.azurecr.io/ml-webapp:latest
 
+      # Step 6: Log in to Azure for deploying the web app
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # Step 7: Deploy to Azure Web App using the Docker image
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
           app-name: 'diabetesprediction-webapp'
           images: 'diabetespredictionregistry.azurecr.io/ml-webapp:latest'
+
+      # Step 8: Post-deployment notification (optional)
+      - name: Send Deployment Notification
+        if: success()
+        run: |
+          curl -X POST -H 'Content-type: application/json' --data '{"text":"Deployment successful!"}' ${{ secrets.SLACK_WEBHOOK_URL }}
