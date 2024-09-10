@@ -54,3 +54,21 @@ jobs:
           app-name: 'diabetesprediction-webapp'
           images: 'diabetespredictionregistry.azurecr.io/ml-webapp:latest'
 
+      # Step 8: Set up Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      # Step 9: Install dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Step 10: Run tests
+      - name: Run tests
+        run: |
+          pytest
+
+
